@@ -1,7 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB }  from "./config/db.js";
-import userRouter from "./routes/user.routes.js"
+import userRouter from "./routes/user.routes.js";
+import authRouter from "./routes/auth.routes.js";
 
 dotenv.config();
 
@@ -14,6 +15,9 @@ app.use(express.json());
 app.get('/',(req,res)=>{
     res.send("Welcome to our Application");
 })
+
+// Auth Route
+app.use('/api/v1/auth',authRouter);
 
 //Users Route;
 app.use('/api/v1/users',userRouter);
