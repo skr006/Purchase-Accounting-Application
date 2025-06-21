@@ -5,7 +5,6 @@ A full-stack MERN application that automates the process of generating and manag
 ## Features
 
 - Full-stack implementation using MongoDB, Express, React, and Node.js (MERN)
-- Create, update, and delete notes with title and description
 - RESTful API with proper error handling and testing
 - Rate limiting integrated via Upstash Redis for enhanced security
 
