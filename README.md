@@ -1,5 +1,7 @@
 <h1 align="center">Purchase Accounting Application</h1>
 
+![Purchase-Accounting-Application](https://socialify.git.ci/skr006/Purchase-Accounting-Application/image?custom_description=A+full-stack+MERN+application+that+automates+the+process+of+generating+and+managing+bill+checkouts.&description=1&font=Raleway&language=1&name=1&pattern=Charlie+Brown&theme=Auto)
+
 A full-stack MERN application that automates the process of generating and managing bill checkouts.
 
 ## Features
