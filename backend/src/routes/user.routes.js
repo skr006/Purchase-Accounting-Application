@@ -8,13 +8,13 @@ import { requireRole } from '../middlewares/requireRole.middleware.js';
 userRouter.get("/",authorize,requireRole('admin'),getUsers);
 
 // GET (by id)
-userRouter.get("/:id",authorize,getUserById);
+userRouter.get("/profile",authorize,getUserById);
 
 // POST
 userRouter.post("/",authorize,createUser);
 
 // PUT
-userRouter.put("/:id",authorize,updateUser);
+userRouter.put("/profile-update",authorize,updateUser);
 
 // DELETE 
 userRouter.delete("/:id",authorize,requireRole('admin'),deleteUser);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authorize } from '../middlewares/auth.middleware.js';
-import { requireRole } from '../middlewares/role.middleware.js';
+import { requireRole } from '../middlewares/requireRole.middleware.js';
 
 import {
   createBill,

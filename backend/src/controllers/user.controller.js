@@ -2,7 +2,7 @@ import User from "../models/user.model.js"
 
 export const getUsers = async (req, res, next) => {
     try {
-        const users = await User.find().select('-password');
+        const users = await User.find().select('-password -updatedAt -createdAt -__v');
         res.status(200).json({
             success: true,
             data: users,
@@ -14,7 +14,7 @@ export const getUsers = async (req, res, next) => {
 
 export const getUserById = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.id).select('-password');
+        const user = await User.findById(req.user._id).select('-_id -password -updatedAt -createdAt -__v');
         if (!user) {
             const error = new Error("User not found");
             error.statusCode = 404;
@@ -49,7 +49,7 @@ export const createUser = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
     try {
         const user = await User.findByIdAndUpdate(
-            req.params.id,
+            req.user._id,
             {
                 name: req.body.name,
                 email: req.body.email,
@@ -66,7 +66,6 @@ export const updateUser = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: user,
         });
     } catch (error) {
         next(error);
@@ -75,7 +74,7 @@ export const updateUser = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findByIdAndDelete(req.user._id);
         if (!user) {
             const error = new Error("User not found");
             error.statusCode = 404;

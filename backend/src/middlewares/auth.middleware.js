@@ -18,7 +18,7 @@ export const authorize = async (req, res, next) => {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(decoded.userId).select('-password -updatedAt -createdAt -__v');
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
