@@ -8,7 +8,7 @@ dotenv.config();
 
 export const signUp = async (req, res, next) => {
   try {
-    const { name: { firstName, lastName }, email, password, username, role } = req.body;
+    const { name: { firstName, lastName }, email, password, username } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -23,7 +23,7 @@ export const signUp = async (req, res, next) => {
       email,
       password: hashedPassword,
       username,
-      role: role || 'user', 
+      role: 'user', 
     });
 
     const token = jwt.sign(

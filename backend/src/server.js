@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDB }  from "./config/db.js";
 import userRouter from "./routes/user.routes.js";
 import authRouter from "./routes/auth.routes.js";
+import billRouter from './routes/bill.route.js';
 
 dotenv.config();
 
@@ -19,9 +20,11 @@ app.get('/',(req,res)=>{
 // Auth Route
 app.use('/api/v1/auth',authRouter);
 
-//Users Route;
+//Users Route
 app.use('/api/v1/users',userRouter);
 
+//Bill Route
+app.use('/api/v1/bills', billRouter);
 
 connectDB().then(() => {
     app.listen(5001,()=>{
