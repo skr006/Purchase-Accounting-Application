@@ -4,18 +4,22 @@ import User from '../models/user.model.js';
 
 export const createBill = async (req, res) => {
   try {
-    const { to, amount } = req.body;
-    to = to.trim();
-    to = await User.findOne({'username':to});
-    if (!to) {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: User not authenticated' });
+    }
+
+    const { to, description, amount } = req.body;
+    if (!to || typeof to !== 'string' || !amount || isNaN(amount)) {
+      return res.status(400).json({ success: false, message: 'Invalid input: to and amount are required' });
+    }
+
+    const to1 = await User.findOne({ 'username': to.trim() });
+    if (!to1) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-
-    const newBill = await Bill.create({ from: req.user._id, to: to._id, amount });
-    bill = newBill.populate('from', 'name email username phoneNumber')
-      .populate('to', 'name email username phoneNumber');
-    res.status(201).json({ success: true, bill:bill });
+    await Bill.create({ from: req.user._id, to: to1._id, amount, description, status: 'pending', completed: false });
+    res.status(201).json({ success: true, message: 'Bill created successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
