@@ -8,17 +8,37 @@ import {
   closeBill,
   getAllBills,
   getMyBills,
-  deleteBill
+  deleteBill,
+  getUnpaidBills,
+  getPaidBills
 } from '../controllers/bill.controller.js';
 
 const billRouter = Router();
 
 billRouter.use(authorize);
+
+
 billRouter.post('/', createBill);
-billRouter.put('/:id', updateBill);
-billRouter.patch('/:id/close', closeBill);
+
+
+billRouter.get('/unpaid', getUnpaidBills);
+
+
+billRouter.get('/paid', getPaidBills);
+
+
 billRouter.get('/my', getMyBills);
+
+
+billRouter.patch('/:id/close', closeBill);
+
+
+billRouter.put('/:id', updateBill);
+
+
 billRouter.get('/', requireRole('admin'), getAllBills);
+
+
 billRouter.delete('/:id', deleteBill);
 
 export default billRouter;

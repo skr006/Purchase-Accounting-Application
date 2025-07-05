@@ -16,6 +16,11 @@ const billSchema = new mongoose.Schema({
         required: [true, 'Bill amount is required'],
         min: 0
     },
+    description: {
+        type: String,
+        required: [true, 'Bill description is required'],
+        trim: true
+    },
     status: {
       type: String,
       enum: ['pending', 'accepted', 'declined', 'completed'],
