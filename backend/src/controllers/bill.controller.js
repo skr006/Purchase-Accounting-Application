@@ -32,8 +32,8 @@ export const closeBill = async (req, res) => {
     const bill = await Bill.findById(req.params.id);
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
 
-    if (!bill.to.equals(req.user._id)) {
-      return res.status(403).json({ message: 'Only recipient can close the bill' });
+    if (!bill.to.equals(req.user._id) && !bill.from.equals(req.user._id) ) {
+      return res.status(403).json({ message: 'Only issuer or payer can close the bill' });
     }
 
     bill.status = 'completed';

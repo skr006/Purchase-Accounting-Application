@@ -39,6 +39,6 @@ billRouter.put('/:id', updateBill);
 billRouter.get('/', requireRole('admin'), getAllBills);
 
 
-billRouter.delete('/:id', deleteBill);
+billRouter.delete('/:id', requireRole('admin'),deleteBill);
 
 export default billRouter;
