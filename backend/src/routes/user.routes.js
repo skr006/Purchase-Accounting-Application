@@ -3,7 +3,7 @@ const userRouter = express.Router();
 import { getUsers,getUserById,createUser,updateUser,deleteUser, updateUserAddress, updateUserName, updateUserPhoneNumber, updateUsername, updateUserPassword } from "../controllers/user.controller.js";
 import { authorize } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/requireRole.middleware.js';
-import { use } from "react";
+// import { use } from "react";
 
 // GET 
 userRouter.get("/",authorize,requireRole('admin'),getUsers);
