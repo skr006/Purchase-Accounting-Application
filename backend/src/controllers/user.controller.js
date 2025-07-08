@@ -100,9 +100,9 @@ export const updateUsername = async (req, res, next) => {
 
 export const updateUserAddress = async (req, res, next) => {
     try {
-        const { street, city, state, country, zipCode } = req.body;
+        const { street, area, city, state, country, zipCode } = req.body;
 
-        if (!street || !city || !state || !country || !zipCode) {
+        if (!street || !city || !state || !country || !zipCode || !area) {
             return res.status(400).json({
                 success: false,
                 message: "All address fields are required",
@@ -114,6 +114,7 @@ export const updateUserAddress = async (req, res, next) => {
             {
                 address: {
                     street,
+                    area,
                     city,
                     state,
                     country,
@@ -234,7 +235,7 @@ export const updateUserPassword = async (req, res, next) => {
             throw error;
         }
 
-        const isMatch = await user.comparePassword(currentPassword);
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,

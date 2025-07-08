@@ -44,7 +44,11 @@ const userSchema = new mongoose.Schema({
         street: { 
             type: String, 
             trim: true 
-        }, 
+        },
+        area:{
+            type: String, 
+            trim: true
+        } ,
         city: { 
             type: String, 
             trim: true 
