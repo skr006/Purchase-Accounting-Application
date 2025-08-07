@@ -19,7 +19,35 @@ const Login = () => {
     e.preventDefault();
 
     // Optional: Validate or send to API
-    console.log("Login Submitted:", formData);
+    fetch("http://localhost:5001/api/v1/auth/sign-in", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          // If response is not in 200-299 range, treat as error
+          return res.json().then((errData) => {
+            throw new Error(errData.message || "Login failed");
+          });
+        }
+        return res.json(); // proceed with parsed JSON
+      })
+      .then((data) => {
+        const token = data.data;
+        if (token) {
+          localStorage.setItem("token", data.data.token);
+          alert("Login successful!");
+        } else {
+          alert(data.message || "Login failed");
+        }
+      })
+      .catch((err) => {
+        console.error("Login error:", err);
+        alert(err.message || "An error occurred during login.");
+      });
 
     // Example reset
     setFormData({

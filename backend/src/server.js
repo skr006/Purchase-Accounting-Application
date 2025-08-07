@@ -4,12 +4,15 @@ import { connectDB }  from "./config/db.js";
 import userRouter from "./routes/user.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import billRouter from './routes/bill.routes.js';
-
+import cors from "cors";
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+app.use(cors({
+origin: "*"
+}));
 app.use(express.json());
 
 //Inital Route;
