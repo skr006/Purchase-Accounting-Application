@@ -2,12 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 // import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
+import { CircleUser } from "lucide-react";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = React.useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-md ">
       <div className="text-xl font-semibold text-gray-800">
         <Link to="/">Getit: The Market bridging application</Link>
       </div>
@@ -37,6 +38,9 @@ const Navbar = () => {
           className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-black"
         >
           SIGN IN
+        </Link>
+        <Link to="/profile" className="text-gray-800 hover:text-black">
+          <CircleUser size={33} />
         </Link>
       </div>
 

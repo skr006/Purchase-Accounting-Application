@@ -26,12 +26,11 @@ const Login = () => {
       },
       body: JSON.stringify(formData),
     })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) {
           // If response is not in 200-299 range, treat as error
-          return res.json().then((errData) => {
-            throw new Error(errData.message || "Login failed");
-          });
+          const errData = await res.json();
+          throw new Error(errData.message || "Login failed");
         }
         return res.json(); // proceed with parsed JSON
       })
