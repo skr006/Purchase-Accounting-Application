@@ -2,7 +2,7 @@ import React from "react";
 
 const PageContent = () => {
   return (
-    <div className="flex-1 p-8 bg-gray-100 overflow-auto">
+    <div className="flex-1 p-8 bg-transparent overflow-auto">
       <h1 className="text-3xl font-semibold mb-4">
         Welcome to the Profile page
       </h1>
