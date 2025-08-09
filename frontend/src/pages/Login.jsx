@@ -41,6 +41,7 @@ const Login = () => {
           localStorage.setItem("token", data.data.token);
           alert("Login successful!");
           navigate("/");
+          window.location.reload();
         } else {
           alert(data.message || "Login failed");
         }
