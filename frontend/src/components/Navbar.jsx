@@ -1,14 +1,27 @@
-import React from "react";
-import { Link } from "react-router-dom";
-// import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { HiMenu, HiX } from "react-icons/hi";
 import { CircleUser } from "lucide-react";
 
 const Navbar = () => {
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
+  // Check if token is in localStorage
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-md ">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-md">
       <div className="text-xl font-semibold text-gray-800">
         <Link to="/">Getit: The Market bridging application</Link>
       </div>
@@ -29,22 +42,36 @@ const Navbar = () => {
         </Link>
       </div>
 
+      {/* Right Side Buttons */}
       <div className="hidden md:flex items-center space-x-2 text-sm font-bold">
-        <Link to="/login" className="text-gray-800 hover:text-black">
-          LOG IN
-        </Link>
-        <Link
-          to="/signup"
-          className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-black"
-        >
-          SIGN IN
-        </Link>
-        <Link to="/profile" className="text-gray-800 hover:text-black">
-          <CircleUser size={33} />
-        </Link>
+        {!isAuthenticated ? (
+          <>
+            <Link to="/login" className="text-gray-800 hover:text-black">
+              LOG IN
+            </Link>
+            <Link
+              to="/signup"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-black"
+            >
+              SIGN IN
+            </Link>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={logout}
+              className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-red-600"
+            >
+              LOG OUT
+            </button>
+            <Link to="/profile" className="text-gray-800 hover:text-black">
+              <CircleUser size={33} />
+            </Link>
+          </>
+        )}
       </div>
 
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Toggle */}
       <button
         className="md:hidden text-2xl text-gray-800 focus:outline-none"
         onClick={() => setMenuOpen(!menuOpen)}
@@ -64,49 +91,48 @@ const Navbar = () => {
             >
               <HiX />
             </button>
-            <Link
-              to="/pages"
-              className="hover:text-black"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link to="/pages" onClick={() => setMenuOpen(false)}>
               Pages
             </Link>
-            <Link
-              to="/account"
-              className="hover:text-black"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link to="/account" onClick={() => setMenuOpen(false)}>
               Account
             </Link>
-            <Link
-              to="/blocks"
-              className="hover:text-black"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link to="/blocks" onClick={() => setMenuOpen(false)}>
               Blocks
             </Link>
-            <Link
-              to="/docs"
-              className="hover:text-black"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link to="/docs" onClick={() => setMenuOpen(false)}>
               Docs
             </Link>
             <hr />
-            <Link
-              to="/login"
-              className="text-gray-800 hover:text-black"
-              onClick={() => setMenuOpen(false)}
-            >
-              LOG IN
-            </Link>
-            <Link
-              to="/signup"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-black"
-              onClick={() => setMenuOpen(false)}
-            >
-              SIGN IN
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link to="/login" onClick={() => setMenuOpen(false)}>
+                  LOG IN
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-black"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  SIGN IN
+                </Link>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMenuOpen(false);
+                  }}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md hover:bg-red-600"
+                >
+                  LOG OUT
+                </button>
+                <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                  <CircleUser size={33} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
