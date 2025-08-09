@@ -15,9 +15,10 @@ const Navbar = () => {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
     setIsAuthenticated(false);
     navigate("/login");
+    window.location.reload();
   };
 
   return (

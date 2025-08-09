@@ -21,19 +21,18 @@ const PersonalInfo = () => {
           console.log(data.data);
           setUserData(data.data);
         } else {
-          // handle error
           console.log("Error fetching user data:", response.statusText);
         }
       } catch (error) {
-        // handle error
         console.log(error);
       }
     };
 
     fetchUserData();
   }, []);
+
   return (
-    <div className="flex-1 min-h-screen flex items-center justify-center pt-28 md:pt-32 bg-transparent">
+    <div className="flex-1 p-6 flex items-center justify-center space-y-6 bg-transparent">
       <div className="w-full max-w-3xl px-2 sm:px-8 flex flex-col gap-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-center text-gray-700 mb-8 sm:mb-10">
           Personal Details

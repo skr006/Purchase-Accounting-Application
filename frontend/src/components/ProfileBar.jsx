@@ -62,10 +62,7 @@ const Sidebar = ({ setCategory }) => {
         <li
           className="flex items-center space-x-2 hover:text-blue-400 cursor-pointer py-2 px-2 rounded transition-colors"
           onClick={() => setCategory(7)}
-        >
-          <Settings size={20} />
-          <span className="hidden sm:inline">Settings</span>
-        </li>
+        ></li>
       </ul>
     </div>
   );
