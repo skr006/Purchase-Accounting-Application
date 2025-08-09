@@ -7,22 +7,27 @@ import SignUp from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
 
-const Dummy = ({ title }) => <div className="p-10 text-2xl">{title} Page</div>;
+const Dummy = ({ title }) => <div className="p- text-2xl">{title} Page</div>;
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/pages" element={<Dummy title="Pages" />} />
-        <Route path="/account" element={<Dummy title="Account" />} />
-        <Route path="/blocks" element={<Dummy title="Blocks" />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-      </Routes>
-      <Footer />
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+
+        <main className="flex-1 pt-20 pb-28">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/pages" element={<Dummy title="Pages" />} />
+            <Route path="/account" element={<Dummy title="Account" />} />
+            <Route path="/blocks" element={<Dummy title="Blocks" />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }
