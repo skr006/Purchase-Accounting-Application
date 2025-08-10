@@ -29,11 +29,11 @@ const Navbar = () => {
 
       {/* Desktop Menu */}
       <div className="hidden md:flex space-x-6 text-sm font-medium text-gray-700">
-        <Link to="/pages" className="hover:text-black">
-          Pages
+        <Link to="/paid" className="hover:text-black">
+          Paid Bills
         </Link>
-        <Link to="/account" className="hover:text-black">
-          Account
+        <Link to="/my" className="hover:text-black">
+          Your Bills
         </Link>
         <Link to="/blocks" className="hover:text-black">
           Blocks
