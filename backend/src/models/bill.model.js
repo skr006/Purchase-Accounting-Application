@@ -22,9 +22,9 @@ const billSchema = new mongoose.Schema({
         trim: true
     },
     status: {
-      type: String,
-      enum: ['pending', 'accepted', 'declined', 'completed'],
-      default: 'pending'
+        type: String,
+        enum: ['Pending', 'Paid'],
+        default: 'Pending'
     },
     completed: {
         type: Boolean,
