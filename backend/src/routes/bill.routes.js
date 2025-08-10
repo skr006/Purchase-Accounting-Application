@@ -10,7 +10,8 @@ import {
   getMyBills,
   deleteBill,
   getUnpaidBills,
-  getPaidBills
+  getPaidBills,
+  payBill
 } from '../controllers/bill.controller.js';
 
 const billRouter = Router();
@@ -31,6 +32,8 @@ billRouter.get('/my', getMyBills);
 
 
 billRouter.patch('/:id/close', closeBill);
+
+billRouter.patch('/:id/pay', payBill);
 
 
 billRouter.put('/:id', updateBill);
