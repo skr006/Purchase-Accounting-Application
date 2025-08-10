@@ -4,6 +4,8 @@ import PersonalInfo from "../components/PersonalInfo";
 import Username from "../components/Username";
 import Name from "../components/Name";
 import Address from "../components/Address";
+import Phonenumber from "../components/Phonenamber";
+import Password from "../components/Password";
 const Profile = () => {
   const [category, setCategory] = useState(0);
 
@@ -17,8 +19,8 @@ const Profile = () => {
       {category === 2 && <Name />}
       {category === 3 && <Address />}
       {category === 4 && <Username />}
-      {/* {category === 5 && <PhoneNumber />}
-      {category === 6 && <ChangePassword />} */}
+      {category === 5 && <Phonenumber />}
+      {category === 6 && <Password />}
     </div>
   );
 };
