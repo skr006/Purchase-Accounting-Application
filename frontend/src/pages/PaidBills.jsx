@@ -21,9 +21,9 @@ const PaidBills = () => {
         } else {
           setError(data.message || "Failed to load bills.");
         }
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         setError("An error occurred while fetching bills.");
-        error.message = err.message;
       } finally {
         setLoading(false);
       }
@@ -49,7 +49,7 @@ const PaidBills = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 bg-gray-50">
+    <div className="min-h-screen p-4">
       <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
         Paid Bills
       </h1>
@@ -63,10 +63,10 @@ const PaidBills = () => {
             >
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  To: {bill.to.name.firstName} {bill.to.name.lastName}
+                  To: {bill.to?.name?.firstName} {bill.to?.name?.lastName}
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  From: {bill.from.name.firstName} {bill.from.name.lastName}
+                  From: {bill.from?.name?.firstName} {bill.from?.name?.lastName}
                 </p>
                 <p className="text-gray-600 text-sm">
                   Description: {bill.description}
@@ -76,12 +76,12 @@ const PaidBills = () => {
                 <p className="text-lg font-bold text-black">₹{bill.amount}</p>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    bill.completed
+                    bill.status === "Paid"
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {bill.completed ? "Paid" : "Pending"}
+                  {bill.status}
                 </span>
               </div>
               <p className="mt-3 text-xs text-gray-400">
