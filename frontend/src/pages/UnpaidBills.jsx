@@ -4,6 +4,8 @@ const UnpaidBills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [payingId, setPayingId] = useState(null);
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -21,9 +23,9 @@ const UnpaidBills = () => {
         } else {
           setError(data.message || "Failed to load bills.");
         }
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         setError("An error occurred while fetching bills.");
-        error.message = err.message;
       } finally {
         setLoading(false);
       }
@@ -31,6 +33,42 @@ const UnpaidBills = () => {
 
     fetchBills();
   }, []);
+
+  const handlePayBill = async (billId) => {
+    setActionError("");
+    setPayingId(billId);
+    try {
+      const res = await fetch(
+        `http://localhost:5001/api/v1/bills/${billId}/pay`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Update bill status locally
+        setBills((prev) =>
+          prev.map((bill) =>
+            bill._id === billId
+              ? { ...bill, status: "Paid", completed: true }
+              : bill
+          )
+        );
+      } else {
+        setActionError(data.message || "Failed to pay bill.");
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setActionError("An error occurred while paying the bill.");
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -49,10 +87,13 @@ const UnpaidBills = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 bg-gray-50">
+    <div className="min-h-screen p-4">
       <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
         Unpaid Bills
       </h1>
+      {actionError && (
+        <p className="text-center text-red-500 mb-4">{actionError}</p>
+      )}
 
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {bills.length > 0 ? (
@@ -63,10 +104,10 @@ const UnpaidBills = () => {
             >
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  To: {bill.to.name.firstName} {bill.to.name.lastName}
+                  To: {bill.to?.name?.firstName} {bill.to?.name?.lastName}
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  From: {bill.from.name.firstName} {bill.from.name.lastName}
+                  From: {bill.from?.name?.firstName} {bill.from?.name?.lastName}
                 </p>
                 <p className="text-gray-600 text-sm">
                   Description: {bill.description}
@@ -76,14 +117,25 @@ const UnpaidBills = () => {
                 <p className="text-lg font-bold text-black">₹{bill.amount}</p>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    bill.completed
+                    bill.status === "Paid"
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {bill.completed ? "Paid" : "Pending"}
+                  {bill.status}
                 </span>
               </div>
+              {bill.status !== "Paid" && (
+                <button
+                  onClick={() => handlePayBill(bill._id)}
+                  className={`mt-4 w-full py-2 bg-black text-white rounded-md hover:bg-gray-900 transition ${
+                    payingId === bill._id ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
+                  disabled={payingId === bill._id}
+                >
+                  {payingId === bill._id ? "Paying..." : "Pay Bill"}
+                </button>
+              )}
               <p className="mt-3 text-xs text-gray-400">
                 Created at: {new Date(bill.createdAt).toLocaleDateString()}
               </p>
