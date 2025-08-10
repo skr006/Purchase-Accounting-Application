@@ -6,6 +6,9 @@ import Login from "./pages/Login";
 import SignUp from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
+import PaidBills from "./pages/PaidBills";
+import MyBills from "./pages/MyBills";
+import UnpaidBills from "./pages/UnpaidBills";
 
 const Dummy = ({ title }) => <div className="p- text-2xl">{title} Page</div>;
 
@@ -18,9 +21,9 @@ function App() {
         <main className="flex-1 pt-20 pb-28">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/pages" element={<Dummy title="Pages" />} />
-            <Route path="/account" element={<Dummy title="Account" />} />
-            <Route path="/blocks" element={<Dummy title="Blocks" />} />
+            <Route path="/unpaid" element={<UnpaidBills />} />
+            <Route path="/my" element={<MyBills />} />
+            <Route path="/paid" element={<PaidBills />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
