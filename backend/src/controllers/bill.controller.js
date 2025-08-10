@@ -18,7 +18,7 @@ export const createBill = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    await Bill.create({ from: req.user._id, to: to1._id, amount, description, status: 'pending', completed: false });
+    await Bill.create({ from: req.user._id, to: to1._id, amount, description, status:'Pending', completed: false });
     res.status(201).json({ success: true, message: 'Bill created successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -35,8 +35,13 @@ export const closeBill = async (req, res) => {
     if (!bill.to.equals(req.user._id) && !bill.from.equals(req.user._id) ) {
       return res.status(403).json({ message: 'Only issuer or payer can close the bill' });
     }
+    if (bill.completed) {
+      return res.status(400).json({ message: 'Bill is already closed' });
+    }
+    if (bill.status !== 'Paid') {
+      return res.status(400).json({ message: 'Bill must be paid before closing' });
+    }
 
-    bill.status = 'completed';
     bill.completed = true;
     await bill.save();
 
@@ -46,13 +51,30 @@ export const closeBill = async (req, res) => {
   }
 };
 
+export const payBill = async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.id);
+    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+    if (!bill.to.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Only the recipient can mark the bill as paid' });
+    }
+    if (bill.completed) {
+      return res.status(400).json({ message: 'Bill is already paid' });
+    }
+    bill.status = 'Paid';
+    await bill.save();
+    res.json({ success: true, bill });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 export const getUnpaidBills = async (req, res) => {
   try {
     
     const bills = await Bill.find({
       to: req.user._id,
-      status: 'pending'
+      completed: false
     }).populate('from', 'name email username phoneNumber')
       .populate('to', 'name email username phoneNumber')
     .sort({ createdAt: -1 });
@@ -67,7 +89,7 @@ export const getPaidBills = async (req, res) => {
   try {
     const bills = await Bill.find({
       to: req.user._id,
-      status: 'completed'
+      completed:true
     }).populate('from', 'name email username phoneNumber')
       .populate('to', 'name email username phoneNumber')
     .sort({ createdAt: -1 });
@@ -123,13 +145,33 @@ export const deleteBill = async (req, res) => {
 export const updateBill = async (req, res) => {
   try {
     const bill = await Bill.findById(req.params.id);
-    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
 
+    // Only the original sender can update
     if (!bill.from.equals(req.user._id)) {
       return res.status(403).json({ message: 'Not authorized to update this bill' });
     }
 
-    const updatedBill = await Bill.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { amount, description } = req.body;
+
+    // Validate amount if provided
+    if (amount !== undefined && isNaN(amount)) {
+      return res.status(400).json({ success: false, message: 'Amount must be a number' });
+    }
+
+    // Build only provided fields to avoid overwriting required values with undefined
+    const updates = {};
+    if (amount !== undefined) updates.amount = amount;
+    if (description !== undefined) updates.description = description;
+
+    const updatedBill = await Bill.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    );
+
     res.json({ success: true, bill: updatedBill });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
