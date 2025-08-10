@@ -14,6 +14,9 @@ const SignUp = () => {
     agree: false,
   });
 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -38,34 +41,62 @@ const SignUp = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
 
     if (!formData.agree) {
-      alert("You must agree to the Terms and Conditions");
+      setError("You must agree to the Terms and Conditions");
       return;
     }
 
-    // Optional: submit to API or console
-    console.log("Form Submitted:", formData);
-
-    // Example reset:
-    setFormData({
+    const payload = {
       name: {
-        firstName: "",
-        lastName: "",
+        firstName: formData.name.firstName,
+        lastName: formData.name.lastName,
       },
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      agree: false,
-    });
+      email: formData.email,
+      password: formData.password,
+      username: formData.username,
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:5001/api/v1/auth/sign-up",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess("Registration successful!");
+        setFormData({
+          name: { firstName: "", lastName: "" },
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          agree: false,
+        });
+      } else {
+        setError(data.message || "Registration failed.");
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    }
   };
 
   return (
@@ -77,6 +108,9 @@ const SignUp = () => {
         <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
           Register yourself.
         </p>
+
+        {error && <p className="mb-4 text-red-600">{error}</p>}
+        {success && <p className="mb-4 text-green-600">{success}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
           <div>
