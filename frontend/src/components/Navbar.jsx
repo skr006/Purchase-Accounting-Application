@@ -35,8 +35,8 @@ const Navbar = () => {
         <Link to="/my" className="hover:text-black">
           Your Bills
         </Link>
-        <Link to="/blocks" className="hover:text-black">
-          Blocks
+        <Link to="/unpaid" className="hover:text-black">
+          Unpaid Bills
         </Link>
         <Link to="/docs" className="hover:text-black">
           Docs
@@ -92,14 +92,14 @@ const Navbar = () => {
             >
               <HiX />
             </button>
-            <Link to="/pages" onClick={() => setMenuOpen(false)}>
-              Pages
+            <Link to="/paid" onClick={() => setMenuOpen(false)}>
+              Paid Bills
             </Link>
-            <Link to="/account" onClick={() => setMenuOpen(false)}>
-              Account
+            <Link to="/my" onClick={() => setMenuOpen(false)}>
+              Your Bills
             </Link>
-            <Link to="/blocks" onClick={() => setMenuOpen(false)}>
-              Blocks
+            <Link to="/unpaid" onClick={() => setMenuOpen(false)}>
+              Unaid Bills
             </Link>
             <Link to="/docs" onClick={() => setMenuOpen(false)}>
               Docs
