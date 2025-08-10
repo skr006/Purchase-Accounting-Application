@@ -71,7 +71,7 @@ const MyBills = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600 text-lg">Loading bills...</p>
       </div>
     );
@@ -79,14 +79,14 @@ const MyBills = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-500 text-lg">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4 bg-gray-50">
+    <div className="min-h-screen p-4">
       <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
         My Bills
       </h1>
