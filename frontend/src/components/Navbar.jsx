@@ -38,8 +38,8 @@ const Navbar = () => {
         <Link to="/unpaid" className="hover:text-black">
           Unpaid Bills
         </Link>
-        <Link to="/docs" className="hover:text-black">
-          Docs
+        <Link to="/new-bill" className="hover:text-black">
+          Create Bill
         </Link>
       </div>
 
@@ -101,8 +101,8 @@ const Navbar = () => {
             <Link to="/unpaid" onClick={() => setMenuOpen(false)}>
               Unaid Bills
             </Link>
-            <Link to="/docs" onClick={() => setMenuOpen(false)}>
-              Docs
+            <Link to="/new-bill" onClick={() => setMenuOpen(false)}>
+              Create Bill
             </Link>
             <hr />
             {!isAuthenticated ? (
