@@ -9,8 +9,9 @@ import Footer from "./components/Footer";
 import PaidBills from "./pages/PaidBills";
 import MyBills from "./pages/MyBills";
 import UnpaidBills from "./pages/UnpaidBills";
+import NewBill from "./pages/NewBill";
 
-const Dummy = ({ title }) => <div className="p- text-2xl">{title} Page</div>;
+// const Dummy = ({ title }) => <div className="p- text-2xl">{title} Page</div>;
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/new-bill" element={<NewBill />} />
           </Routes>
         </main>
         <Footer />
