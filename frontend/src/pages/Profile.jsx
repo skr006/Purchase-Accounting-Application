@@ -1,4 +1,4 @@
-import Sidebar from "../components/Profilebar";
+import Sidebar from "../components/ProfileBar";
 import { useState } from "react";
 import PersonalInfo from "../components/PersonalInfo";
 import Username from "../components/Username";
