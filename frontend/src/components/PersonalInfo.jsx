@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import host from "../../host";
 
 const PersonalInfo = () => {
   const [userData, setUserData] = useState(null);
@@ -7,15 +8,12 @@ const PersonalInfo = () => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch(
-          "http://localhost:5001/api/v1/users/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(host + "/api/v1/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           console.log(data.data);

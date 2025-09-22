@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import host from "../../host";
 const NewBill = () => {
   const [formData, setFormData] = useState({
     to: "",
@@ -38,7 +38,7 @@ const NewBill = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/v1/bills/", {
+      const res = await fetch(host + "/api/v1/bills/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

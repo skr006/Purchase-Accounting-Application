@@ -1,4 +1,5 @@
 import { useState } from "react";
+import host from "../../host";
 
 const Password = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -29,20 +30,17 @@ const Password = () => {
     if (Object.keys(errs).length !== 0) return;
 
     try {
-      const res = await fetch(
-        "http://localhost:5001/api/v1/users/profile-update/password",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-          }),
-        }
-      );
+      const res = await fetch(host + "/api/v1/users/profile-update/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
       const data = await res.json();
 
       if (data.success) {

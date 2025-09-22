@@ -1,4 +1,5 @@
 import { useState } from "react";
+import host from "../../host";
 
 const Name = () => {
   const [firstName, setFirstName] = useState("");
@@ -16,7 +17,7 @@ const Name = () => {
       return;
     }
 
-    fetch("http://localhost:5001/api/v1/users/profile-update/name", {
+    fetch(host + "/api/v1/users/profile-update/name", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

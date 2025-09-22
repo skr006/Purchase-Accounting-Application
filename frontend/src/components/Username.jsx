@@ -1,11 +1,11 @@
 import { useState } from "react";
-
+import host from "../../host";
 const Username = () => {
   const [username, setUsername] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch("http://localhost:5001/api/v1/users/profile-update/username", {
+    fetch(host + "/api/v1/users/profile-update/username", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

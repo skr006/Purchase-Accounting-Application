@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import host from "../../host";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -67,16 +68,13 @@ const SignUp = () => {
     };
 
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/v1/auth/sign-up",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(host + "/api/v1/auth/sign-up", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 

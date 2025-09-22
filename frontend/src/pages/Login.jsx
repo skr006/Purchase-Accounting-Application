@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import host from "../../host";
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -20,7 +20,7 @@ const Login = () => {
     e.preventDefault();
 
     // Optional: Validate or send to API
-    fetch("http://localhost:5001/api/v1/auth/sign-in", {
+    fetch(host + "/api/v1/auth/sign-in", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

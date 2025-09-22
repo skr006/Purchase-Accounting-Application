@@ -1,4 +1,5 @@
 import { useState } from "react";
+import host from "../../host";
 
 const Phonenumber = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -12,7 +13,7 @@ const Phonenumber = () => {
       return;
     }
 
-    fetch("http://localhost:5001/api/v1/users/profile-update/phone", {
+    fetch(host + "/api/v1/users/profile-update/phone", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

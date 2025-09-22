@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import host from "../../host";
 
 const MyBills = () => {
   const [bills, setBills] = useState([]);
@@ -9,7 +10,7 @@ const MyBills = () => {
   // Fetch bills from API
   const fetchBills = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/v1/bills/my", {
+      const res = await fetch(host + "/api/v1/bills/my", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -39,16 +40,13 @@ const MyBills = () => {
   const handleCloseBill = async (billId) => {
     setActionError("");
     try {
-      const res = await fetch(
-        `http://localhost:5001/api/v1/bills/${billId}/close`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await fetch(`${host}/api/v1/bills/${billId}/close`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       const data = await res.json();
       if (res.ok && data.success) {

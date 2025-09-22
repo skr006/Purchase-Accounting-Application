@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import host from "../../host";
 
 const PaidBills = () => {
   const [bills, setBills] = useState([]);
@@ -8,7 +9,7 @@ const PaidBills = () => {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/v1/bills/paid", {
+        const res = await fetch(host + "/api/v1/bills/paid", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,

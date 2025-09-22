@@ -1,4 +1,5 @@
 import { useState } from "react";
+import host from "../../host";
 
 const Address = () => {
   const [street, setStreet] = useState("");
@@ -32,7 +33,7 @@ const Address = () => {
       return;
     }
 
-    fetch("http://localhost:5001/api/v1/users/profile-update/address", {
+    fetch(host + "/api/v1/users/profile-update/address", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
