@@ -1,185 +1,191 @@
-import User from "../models/user.model.js"
-import bcrypt from "bcryptjs";
+import User from "../models/user.model.js";
 
-export const getUsers = async (req, res, next) => {
+const normalizeText = (value) => typeof value === "string" ? value.trim() : "";
+
+const handleControllerError = (res, error) => {
+    if (error?.code === 11000) {
+        const field = Object.keys(error.keyPattern || {})[0] || "field";
+        return res.status(409).json({
+            success: false,
+            message: `A user with this ${field} already exists`,
+        });
+    }
+
+    return res.status(500).json({
+        success: false,
+        message: error.message,
+    });
+};
+
+const publicUserQuery = "-password -updatedAt -createdAt -__v";
+
+export const getUsers = async (req, res) => {
     try {
-        const users = await User.find().select('-password -updatedAt -createdAt -__v');
+        const users = await User.find().select(publicUserQuery);
         res.status(200).json({
             success: true,
             data: users,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
-export const getUserById = async (req, res, next) => {
+export const getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select('-_id -password -updatedAt -createdAt -__v');
+        const user = await User.findById(req.user._id).select(publicUserQuery);
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
+
         res.status(200).json({
             success: true,
             data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
-export const createUser = async (req, res, next) => {
+export const createUser = async (req, res) => {
     try {
-            const { name: { firstName, lastName }, email, password, username } = req.body;
+        const firstName = normalizeText(req.body?.name?.firstName);
+        const lastName = normalizeText(req.body?.name?.lastName);
+        const email = normalizeText(req.body?.email).toLowerCase();
+        const username = normalizeText(req.body?.username);
+        const password = req.body?.password;
+        const role = req.body?.role === "admin" ? "admin" : "user";
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User already exists.' });
-    }
+        if (!firstName || !lastName || !email || !username || !password) {
+            return res.status(400).json({ success: false, message: "All user fields are required" });
+        }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: existingUser.email === email ? "User already exists." : "Username already exists.",
+            });
+        }
 
-    const newUser = await User.create({
-      name: { firstName, lastName },
-      email,
-      password: hashedPassword,
-      username,
-      role: 'user', 
-    });
+        const newUser = await User.create({
+            name: { firstName, lastName },
+            email,
+            password,
+            username,
+            role,
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully",
+            data: newUser.toSafeJSON(),
+        });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
-export const updateUsername = async (req, res, next) => {
+export const updateUsername = async (req, res) => {
     try {
-        const { username } = req.body;
+        const username = normalizeText(req.body?.username);
 
         if (!username) {
-            return res.status(400).json({
-                success: false,
-                message: "Username is required",
-            });
+            return res.status(400).json({ success: false, message: "Username is required" });
+        }
+
+        const existingUser = await User.findOne({ username, _id: { $ne: req.user._id } });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: "Username already exists" });
         }
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
             { username },
-            { new: true }
-        );
+            { new: true, runValidators: true }
+        ).select(publicUserQuery);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
             success: true,
             message: "Username updated successfully",
+            data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
-}
+};
 
-export const updateUserAddress = async (req, res, next) => {
+export const updateUserAddress = async (req, res) => {
     try {
-        const { street, area, city, state, country, zipCode } = req.body;
+        const address = {
+            street: normalizeText(req.body?.street),
+            area: normalizeText(req.body?.area),
+            city: normalizeText(req.body?.city),
+            state: normalizeText(req.body?.state),
+            country: normalizeText(req.body?.country),
+            zipCode: normalizeText(req.body?.zipCode),
+        };
 
-        if (!street || !city || !state || !country || !zipCode || !area) {
-            return res.status(400).json({
-                success: false,
-                message: "All address fields are required",
-            });
+        if (Object.values(address).some((value) => !value)) {
+            return res.status(400).json({ success: false, message: "All address fields are required" });
         }
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            {
-                address: {
-                    street,
-                    area,
-                    city,
-                    state,
-                    country,
-                    zipCode
-                }
-            },
-            { new: true }
-        );
+            { address },
+            { new: true, runValidators: true }
+        ).select(publicUserQuery);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
             success: true,
             message: "Address updated successfully",
+            data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
-}
+};
 
-export const updateUserPhoneNumber = async (req, res, next) => {
+export const updateUserPhoneNumber = async (req, res) => {
     try {
-        const { phoneNumber } = req.body;
+        const phoneNumber = normalizeText(req.body?.phoneNumber);
 
-        if (!phoneNumber) {
-            return res.status(400).json({
-                success: false,
-                message: "Phone number is required",
-            });
+        if (!/^\d{10}$/.test(phoneNumber)) {
+            return res.status(400).json({ success: false, message: "A valid 10-digit phone number is required" });
         }
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
             { phoneNumber },
-            { new: true }
-        );
+            { new: true, runValidators: true }
+        ).select(publicUserQuery);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
             success: true,
             message: "Phone number updated successfully",
+            data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
-}
+};
 
-export const updateUserName = async (req, res, next) => {
+export const updateUserName = async (req, res) => {
     try {
-        const { firstName, lastName } = req.body;
+        const firstName = normalizeText(req.body?.firstName);
+        const lastName = normalizeText(req.body?.lastName);
 
         if (!firstName || !lastName) {
             return res.status(400).json({
@@ -190,36 +196,28 @@ export const updateUserName = async (req, res, next) => {
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            {
-                name: {
-                    firstName,
-                    lastName
-                }
-            },
-            { new: true }
-        );
+            { name: { firstName, lastName } },
+            { new: true, runValidators: true }
+        ).select(publicUserQuery);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
             success: true,
             message: "Name updated successfully",
+            data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
-export const updateUserPassword = async (req, res, next) => {
+export const updateUserPassword = async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const currentPassword = req.body?.currentPassword;
+        const newPassword = req.body?.newPassword;
 
         if (!currentPassword || !newPassword) {
             return res.status(400).json({
@@ -228,14 +226,19 @@ export const updateUserPassword = async (req, res, next) => {
             });
         }
 
-        const user = await User.findById(req.user._id);
-        if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+        if (typeof newPassword !== "string" || newPassword.trim().length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be at least 6 characters long",
+            });
         }
 
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        const user = await User.findById(req.user._id).select("+password");
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const isMatch = await user.comparePassword(currentPassword);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
@@ -243,9 +246,7 @@ export const updateUserPassword = async (req, res, next) => {
             });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-        user.password = hashedPassword;
+        user.password = newPassword;
         await user.save();
 
         res.status(200).json({
@@ -253,50 +254,66 @@ export const updateUserPassword = async (req, res, next) => {
             message: "Password updated successfully",
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
-export const updateUser = async (req, res, next) => {
+export const updateUser = async (req, res) => {
     try {
+        const updates = {};
+
+        if (req.body?.name) {
+            const firstName = normalizeText(req.body.name.firstName);
+            const lastName = normalizeText(req.body.name.lastName);
+            if (!firstName || !lastName) {
+                return res.status(400).json({ success: false, message: "Both first name and last name are required" });
+            }
+            updates.name = { firstName, lastName };
+        }
+
+        if (req.body?.email !== undefined) {
+            const email = normalizeText(req.body.email).toLowerCase();
+            if (!email) {
+                return res.status(400).json({ success: false, message: "Email is required" });
+            }
+            updates.email = email;
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ success: false, message: "No supported profile fields provided" });
+        }
+
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            {
-                name: req.body.name,
-                email: req.body.email,
-                password: req.body.password,
-            },
-            { new: true }
-        );
+            updates,
+            { new: true, runValidators: true }
+        ).select(publicUserQuery);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
             success: true,
+            message: "Profile updated successfully",
+            data: user,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return handleControllerError(res, error);
     }
 };
 
 export const deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndDelete(req.user._id);
-        if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+        if (String(req.params.id) === String(req.user._id)) {
+            return res.status(400).json({ success: false, message: "Admins cannot delete their own account from this route" });
         }
+
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
         res.status(200).json({
             success: true,
             message: "User deleted successfully",

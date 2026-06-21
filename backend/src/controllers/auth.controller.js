@@ -1,49 +1,61 @@
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import User from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import '../config/env.js';
 
-dotenv.config();
+const createToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
 
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+  );
+};
+
+const normalizeText = (value) => typeof value === 'string' ? value.trim() : '';
 
 export const signUp = async (req, res, next) => {
   try {
-    const { name: { firstName, lastName }, email, password, username } = req.body;
-    
+    const firstName = normalizeText(req.body?.name?.firstName);
+    const lastName = normalizeText(req.body?.name?.lastName);
+    const email = normalizeText(req.body?.email).toLowerCase();
+    const username = normalizeText(req.body?.username);
+    const password = req.body?.password;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (!firstName || !lastName || !email || !username || !password) {
+      return res.status(400).json({ success: false, message: 'All signup fields are required.' });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser?.email === email) {
       return res.status(400).json({ success: false, message: 'User already exists.' });
     }
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
+
+    if (existingUser?.username === username) {
       return res.status(400).json({ success: false, message: 'Username already exists.' });
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({
       name: { firstName, lastName },
       email,
-      password: hashedPassword,
+      password,
       username,
-      role: 'user', 
+      role: 'user',
     });
 
-    const token = jwt.sign(
-      { userId: newUser._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
-    );
+    const token = createToken(newUser._id);
 
     res.status(201).json({
       success: true,
       message: 'User created successfully',
       data: {
         token,
-        user: newUser,
+        user: newUser.toSafeJSON(),
       },
     });
   } catch (error) {
@@ -53,30 +65,29 @@ export const signUp = async (req, res, next) => {
 
 export const signIn = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeText(req.body?.email).toLowerCase();
+    const password = req.body?.password;
+
     if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    const user = await User.findOne({ email }).select('+password');
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
-    );
+    const token = createToken(user._id);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
-        token
+        token,
+        user: user.toSafeJSON(),
       },
     });
   } catch (error) {
-    next(error); 
+    next(error);
   }
 };
