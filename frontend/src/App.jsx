@@ -10,29 +10,31 @@ import PaidBills from "./pages/PaidBills";
 import MyBills from "./pages/MyBills";
 import UnpaidBills from "./pages/UnpaidBills";
 import NewBill from "./pages/NewBill";
-
-// const Dummy = ({ title }) => <div className="p- text-2xl">{title} Page</div>;
+import { AuthProvider } from "./context/AuthProvider";
+import { ProtectedRoute, PublicOnlyRoute } from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
+      <AuthProvider>
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          <Navbar />
 
-        <main className="flex-1 pt-20 pb-28">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/unpaid" element={<UnpaidBills />} />
-            <Route path="/my" element={<MyBills />} />
-            <Route path="/paid" element={<PaidBills />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/new-bill" element={<NewBill />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+          <main className="flex-1 pt-20">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/unpaid" element={<ProtectedRoute><UnpaidBills /></ProtectedRoute>} />
+              <Route path="/my" element={<ProtectedRoute><MyBills /></ProtectedRoute>} />
+              <Route path="/paid" element={<ProtectedRoute><PaidBills /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+              <Route path="/signup" element={<PublicOnlyRoute><SignUp /></PublicOnlyRoute>} />
+              <Route path="/new-bill" element={<ProtectedRoute><NewBill /></ProtectedRoute>} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </AuthProvider>
     </Router>
   );
 }

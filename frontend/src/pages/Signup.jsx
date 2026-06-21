@@ -1,22 +1,26 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import host from "../../host";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { apiFetch } from "../lib/api";
+
+const initialForm = {
+  name: {
+    firstName: "",
+    lastName: "",
+  },
+  username: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  agree: false,
+};
 
 const SignUp = () => {
-  const [formData, setFormData] = useState({
-    name: {
-      firstName: "",
-      lastName: "",
-    },
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    agree: false,
-  });
-
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState(initialForm);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -29,26 +33,26 @@ const SignUp = () => {
           [name]: value,
         },
       }));
-    } else if (type === "checkbox") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.trim().length < 6) {
+      setError("Password must be at least 6 characters long");
       return;
     }
 
@@ -57,85 +61,75 @@ const SignUp = () => {
       return;
     }
 
-    const payload = {
-      name: {
-        firstName: formData.name.firstName,
-        lastName: formData.name.lastName,
-      },
-      email: formData.email,
-      password: formData.password,
-      username: formData.username,
-    };
+    setSubmitting(true);
 
     try {
-      const response = await fetch(host + "/api/v1/auth/sign-up", {
+      const data = await apiFetch("/api/v1/auth/sign-up", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: {
+            firstName: formData.name.firstName.trim(),
+            lastName: formData.name.lastName.trim(),
+          },
+          email: formData.email.trim(),
+          password: formData.password,
+          username: formData.username.trim(),
+        }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess("Registration successful!");
-        setFormData({
-          name: { firstName: "", lastName: "" },
-          username: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          agree: false,
-        });
-      } else {
-        setError(data.message || "Registration failed.");
-      }
-      // eslint-disable-next-line no-unused-vars
+      login(data.data);
+      setFormData(initialForm);
+      navigate("/", { replace: true });
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError(err.message || "Registration failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 sm:py-16 md:py-20">
-      <div className="w-full max-w-sm sm:max-w-md md:max-w-lg bg-white p-4 sm:p-8 rounded-md shadow-md">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-lg bg-white p-6 sm:p-8 rounded-md shadow-md border border-gray-200">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
           Sign Up
         </h2>
         <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
-          Register yourself.
+          Create your account.
         </p>
 
-        {error && <p className="mb-4 text-red-600">{error}</p>}
-        {success && <p className="mb-4 text-green-600">{success}</p>}
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.name.firstName}
-              onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.name.lastName}
-              onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                value={formData.name.firstName}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                autoComplete="given-name"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.name.lastName}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                autoComplete="family-name"
+                required
+              />
+            </div>
           </div>
 
           <div>
@@ -147,84 +141,87 @@ const SignUp = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="username"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your Email
+              Email
             </label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="email"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                autoComplete="new-password"
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          <div className="flex items-center">
+          <div className="flex items-start">
             <input
               id="agree"
               name="agree"
               type="checkbox"
               checked={formData.agree}
               onChange={handleChange}
-              className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black"
+              className="mt-1 h-4 w-4 text-black border-gray-300 rounded focus:ring-black"
               required
             />
             <label htmlFor="agree" className="ml-2 text-sm text-gray-600">
-              I agree the{" "}
-              <span className="font-medium">Terms and Conditions</span>
+              I agree to the <span className="font-medium">Terms and Conditions</span>
             </label>
           </div>
 
           <button
             type="submit"
-            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900"
+            disabled={submitting}
+            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900 disabled:opacity-60"
           >
-            SIGN UP
+            {submitting ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-black hover:underline"
-          >
-            Log In
+          <Link to="/login" className="font-semibold text-black hover:underline">
+            Sign In
           </Link>
         </p>
       </div>

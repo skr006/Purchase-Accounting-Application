@@ -1,32 +1,23 @@
 import { useEffect, useState } from "react";
-import host from "../../host";
+import { Link } from "react-router-dom";
+import BillCard from "../components/BillCard";
+import { apiFetch } from "../lib/api";
 
 const UnpaidBills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
-  const [payingId, setPayingId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const res = await fetch(host + "/api/v1/bills/unpaid", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok && data.success) {
-          setBills(data.bills || []);
-        } else {
-          setError(data.message || "Failed to load bills.");
-        }
-        // eslint-disable-next-line no-unused-vars
+        const data = await apiFetch("/api/v1/bills/unpaid");
+        setBills(data.bills || []);
       } catch (err) {
-        setError("An error occurred while fetching bills.");
+        setError(err.message || "Failed to load bills.");
       } finally {
         setLoading(false);
       }
@@ -37,40 +28,25 @@ const UnpaidBills = () => {
 
   const handlePayBill = async (billId) => {
     setActionError("");
-    setPayingId(billId);
-    try {
-      const res = await fetch(`${host}/api/v1/bills/${billId}/pay`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    setActionMessage("");
+    setBusyId(billId);
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        // Update bill status locally
-        setBills((prev) =>
-          prev.map((bill) =>
-            bill._id === billId
-              ? { ...bill, status: "Paid", completed: true }
-              : bill
-          )
-        );
-      } else {
-        setActionError(data.message || "Failed to pay bill.");
-      }
-      // eslint-disable-next-line no-unused-vars
+    try {
+      await apiFetch(`/api/v1/bills/${billId}/pay`, {
+        method: "PATCH",
+      });
+      setBills((prev) => prev.filter((bill) => bill._id !== billId));
+      setActionMessage("Bill marked as paid. The creator can now verify and close it.");
     } catch (err) {
-      setActionError("An error occurred while paying the bill.");
+      setActionError(err.message || "Failed to mark bill as paid.");
     } finally {
-      setPayingId(null);
+      setBusyId(null);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
         <p className="text-gray-600 text-lg">Loading bills...</p>
       </div>
     );
@@ -78,73 +54,48 @@ const UnpaidBills = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-red-500 text-lg">{error}</p>
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <p className="text-red-500 text-lg text-center">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-        Unpaid Bills
-      </h1>
-      {actionError && (
-        <p className="text-center text-red-500 mb-4">{actionError}</p>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Received Bills
+        </h1>
+        <p className="text-sm text-gray-600">
+          Mark a received bill as paid after you complete payment.
+        </p>
+      </div>
+
+      {actionError && <p className="text-red-600 mb-4">{actionError}</p>}
+      {actionMessage && (
+        <p className="text-green-700 mb-4">
+          {actionMessage}{" "}
+          <Link to="/paid" className="font-semibold underline">
+            View paid bills
+          </Link>
+        </p>
       )}
 
-      <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {bills.length > 0 ? (
-          bills.map((bill) => (
-            <div
+      {bills.length > 0 ? (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {bills.map((bill) => (
+            <BillCard
               key={bill._id}
-              className="bg-white rounded-lg shadow-md border border-gray-200 p-6 flex flex-col"
-            >
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  To: {bill.to?.name?.firstName} {bill.to?.name?.lastName}
-                </h2>
-                <p className="text-gray-600 text-sm">
-                  From: {bill.from?.name?.firstName} {bill.from?.name?.lastName}
-                </p>
-                <p className="text-gray-600 text-sm">
-                  Description: {bill.description}
-                </p>
-              </div>
-              <div className="mt-auto flex justify-between items-center">
-                <p className="text-lg font-bold text-black">₹{bill.amount}</p>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    bill.status === "Paid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {bill.status}
-                </span>
-              </div>
-              {bill.status !== "Paid" && (
-                <button
-                  onClick={() => handlePayBill(bill._id)}
-                  className={`mt-4 w-full py-2 bg-black text-white rounded-md hover:bg-gray-900 transition ${
-                    payingId === bill._id ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
-                  disabled={payingId === bill._id}
-                >
-                  {payingId === bill._id ? "Paying..." : "Pay Bill"}
-                </button>
-              )}
-              <p className="mt-3 text-xs text-gray-400">
-                Created at: {new Date(bill.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          ))
-        ) : (
-          <p className="text-center col-span-full text-gray-600">
-            No bills found.
-          </p>
-        )}
-      </div>
+              bill={bill}
+              mode="received"
+              onPay={handlePayBill}
+              busy={busyId === bill._id}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-600">No unpaid received bills found.</p>
+      )}
     </div>
   );
 };

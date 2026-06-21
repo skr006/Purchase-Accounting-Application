@@ -1,177 +1,96 @@
 import { useState } from "react";
-import host from "../../host";
+import { useAuth } from "../hooks/useAuth";
+import { apiFetch } from "../lib/api";
+
+const fields = [
+  ["street", "Door Number & Street"],
+  ["area", "Area"],
+  ["city", "City"],
+  ["state", "State"],
+  ["country", "Country"],
+  ["zipCode", "Zip Code"],
+];
 
 const Address = () => {
-  const [street, setStreet] = useState("");
-  const [area, setArea] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setStateValue] = useState("");
-  const [country, setCountry] = useState("");
-  const [zipCode, setZipCode] = useState("");
+  const { user, updateUser } = useAuth();
+  const [formData, setFormData] = useState({
+    street: user?.address?.street || "",
+    area: user?.address?.area || "",
+    city: user?.address?.city || "",
+    state: user?.address?.state || "",
+    country: user?.address?.country || "",
+    zipCode: user?.address?.zipCode || "",
+  });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
 
-    // Trim values
-    const trimmedStreet = street.trim();
-    const trimmedArea = area.trim();
-    const trimmedCity = city.trim();
-    const trimmedState = state.trim();
-    const trimmedCountry = country.trim();
-    const trimmedZip = zipCode.trim();
+    const payload = Object.fromEntries(
+      Object.entries(formData).map(([key, value]) => [key, value.trim()])
+    );
 
-    // Validation: No empty/space-only values
-    if (
-      !trimmedStreet ||
-      !trimmedArea ||
-      !trimmedCity ||
-      !trimmedState ||
-      !trimmedCountry ||
-      !trimmedZip
-    ) {
-      alert("All address fields are required and cannot be just spaces.");
+    if (Object.values(payload).some((value) => !value)) {
+      setError("All address fields are required.");
       return;
     }
 
-    fetch(host + "/api/v1/users/profile-update/address", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        street: trimmedStreet,
-        area: trimmedArea,
-        city: trimmedCity,
-        state: trimmedState,
-        country: trimmedCountry,
-        zipCode: trimmedZip,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          alert("Address updated successfully!");
-          window.location.reload(); // optional: reload the page
-        } else {
-          alert(data.message || "Failed to update address.");
-        }
-      })
-      .catch((err) => {
-        console.error("Error updating address:", err);
-        alert("An error occurred while updating the address.");
+    setSubmitting(true);
+    try {
+      const data = await apiFetch("/api/v1/users/profile-update/address", {
+        method: "PUT",
+        body: JSON.stringify(payload),
       });
-
-    // Reset fields
-    setStreet("");
-    setArea("");
-    setCity("");
-    setStateValue("");
-    setCountry("");
-    setZipCode("");
+      updateUser(data.data);
+      setMessage("Address updated successfully.");
+    } catch (err) {
+      setError(err.message || "Failed to update address.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 w-screen">
-      <div className="max-w-md bg-white p-8 rounded-md shadow-md w-full">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Update Your Address
-        </h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Enter your complete address details below.
-        </p>
+    <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-lg bg-white p-6 sm:p-8 rounded-md shadow-md border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-800">Update Address</h2>
+        <p className="text-sm text-gray-600 mb-6">Enter your complete address.</p>
+
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+        {message && <p className="mb-4 text-sm text-green-700">{message}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Street */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Door Number & Street
-            </label>
-            <input
-              type="text"
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
+          {fields.map(([name, label]) => (
+            <div key={name}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+              </label>
+              <input
+                type="text"
+                name={name}
+                value={formData[name]}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                required
+              />
+            </div>
+          ))}
 
-          {/* Area */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Area
-            </label>
-            <input
-              type="text"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          {/* City */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              City
-            </label>
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          {/* State */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              State
-            </label>
-            <input
-              type="text"
-              value={state}
-              onChange={(e) => setStateValue(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          {/* Country */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Country
-            </label>
-            <input
-              type="text"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          {/* Zip Code */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Zip Code
-            </label>
-            <input
-              type="text"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              required
-            />
-          </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900"
+            disabled={submitting}
+            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900 disabled:opacity-60"
           >
-            UPDATE ADDRESS
+            {submitting ? "Saving..." : "Save Address"}
           </button>
         </form>
       </div>

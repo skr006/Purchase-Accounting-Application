@@ -1,68 +1,53 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import host from "../../host";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { apiFetch } from "../lib/api";
+
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const location = useLocation();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const from = location.state?.from?.pathname || "/";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSubmitting(true);
 
-    // Optional: Validate or send to API
-    fetch(host + "/api/v1/auth/sign-in", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          // If response is not in 200-299 range, treat as error
-          const errData = await res.json();
-          throw new Error(errData.message || "Login failed");
-        }
-        return res.json(); // proceed with parsed JSON
-      })
-      .then((data) => {
-        const token = data.data;
-        if (token) {
-          localStorage.setItem("token", data.data.token);
-          alert("Login successful!");
-          navigate("/");
-          window.location.reload();
-        } else {
-          alert(data.message || "Login failed");
-        }
-      })
-      .catch((err) => {
-        console.error("Login error:", err);
-        alert(err.message || "An error occurred during login.");
+    try {
+      const data = await apiFetch("/api/v1/auth/sign-in", {
+        method: "POST",
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
       });
 
-    // Example reset
-    setFormData({
-      email: "",
-      password: "",
-    });
+      login(data.data);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
-      <div className="w-full max-w-md bg-white p-8 rounded-md shadow-md">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md bg-white p-6 sm:p-8 rounded-md shadow-md border border-gray-200">
         <h2 className="text-2xl font-bold text-gray-800">Sign In</h2>
-        <p className="text-sm text-gray-600 mb-6">Welcome back!</p>
+        <p className="text-sm text-gray-600 mb-6">Welcome back.</p>
+
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -75,6 +60,7 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="email"
               required
             />
           </div>
@@ -89,24 +75,23 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="current-password"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900"
+            disabled={submitting}
+            className="w-full py-2 mt-2 bg-black text-white font-semibold rounded-md shadow hover:bg-gray-900 disabled:opacity-60"
           >
-            LOGIN
+            {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            className="font-semibold text-black hover:underline"
-          >
+          Do not have an account?{" "}
+          <Link to="/signup" className="font-semibold text-black hover:underline">
             Sign Up
           </Link>
         </p>
